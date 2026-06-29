@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원정보수정</title>
+    <link rel="stylesheet" href="./css/edit-profile.css">
+    <link rel="stylesheet" href="./css/profile-menu.css">
+    <link rel="stylesheet" href="./css/navigation.css">
+    <script src="./js/api.js" defer></script>
+    <script src="./js/profile-menu.js" defer></script>
+    <script src="./js/navigation.js" defer></script>
+    <script src="./js/edit-profile.js" defer></script>
+</head>
+<body>
+    <div class="page">
+        <header class="header">
+            <h1 id="main-logo">Gourmet</h1>
+
+            <div class="profile-menu-wrapper">
+                <button type="button" class="header-profile-button" id="header-profile-button"></button>
+
+                <ul class="profile-dropdown" id="profile-dropdown">
+                    <li id="go-edit-profile">회원정보수정</li>
+                    <li id="go-edit-password">비밀번호수정</li>
+                    <li id="logout-button">로그아웃</li>
+                </ul>
+            </div>
+        </header>
+
+        <main class="main">
+            <section class="edit-profile-box">
+                <div class="page-title-row">
+                    <button class="back-to-posts-button" id="back-to-posts-button">&larr;</button>
+                    <h2>회원정보수정</h2>
+                </div>
+
+                <form id="edit-profile-form" novalidate>
+                    <div class="profile-edit-area">
+                        <label class="profile-label">프로필 사진*</label>
+
+                        <label for="profile-image-input" class="profile-image-box" id="profile-image-box">
+                            <span class="profile-change-text">변경</span>
+                            <img id="profile-preview" src="" alt="프로필 이미지">
+                        </label>
+
+                        <input type="file" id="profile-image-input" accept="image/*" hidden>
+                    </div>
+
+                    <div class="input-group">
+                        <label>이메일</label>
+                        <p class="email-text" id="email-text"></p>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="nickname">닉네임</label>
+                        <input type="text" id="nickname" maxlength="10">
+                        <p class="helper-text" id="nickname-helper"></p>
+                    </div>
+
+                    <button type="submit" id="edit-button" class="active">
+                        수정하기
+                    </button>
+                </form>
+
+                <button type="button" class="withdraw-button" id="withdraw-button">
+                    회원 탈퇴
+                </button>
+
+                <div class="toast" id="toast">수정완료</div>
+            </section>
+        </main>
+    </div>
+
+    <div class="modal-backdrop" id="withdraw-modal">
+        <div class="modal">
+            <h3>회원탈퇴 하시겠습니까?</h3>
+
+            <div class="modal-buttons">
+                <button type="button" class="cancel-button" id="withdraw-cancel">취소</button>
+                <button type="button" class="confirm-button" id="withdraw-confirm">확인</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

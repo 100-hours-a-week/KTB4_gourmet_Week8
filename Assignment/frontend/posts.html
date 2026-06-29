@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 목록</title>
+    <link rel="stylesheet" href="./css/posts.css">
+    <link rel="stylesheet" href="./css/profile-menu.css">
+    <script src="./js/api.js" defer></script>
+    <script src="./js/profile-menu.js" defer></script>
+    <script src="./js/posts.js" defer></script>
+    <script src="./js/navigation.js" defer></script>
+
+</head>
+<body>
+    <div class="page">
+        <header class="header">
+            <h1 id="main-logo">Gourmet</h1>
+            <div class="profile-menu-wrapper">
+                <button type="button" class="profile-button" id="header-profile-button"></button>
+
+                <ul class="profile-dropdown" id="profile-dropdown">
+                    <li id="go-edit-profile">회원정보수정</li>
+                    <li id="go-edit-password">비밀번호수정</li>
+                    <li id="logout-button">로그아웃</li>
+                </ul>
+            </div>
+        </header>
+
+        <main class="main">
+            <section class="intro-section">
+                <p>안녕하세요,</p>
+                <p>Gourmet <strong>게시판</strong> 입니다.</p>
+            </section>
+
+            <section class="action-section">
+                <button type="button" id="write-button" class="write-button">
+                    게시글 작성
+                </button>
+            </section>
+
+            <section class="post-list" id="post-list"></section>
+        </main>
+    </div>
+</body>
+</html>

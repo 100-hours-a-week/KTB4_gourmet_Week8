@@ -1,0 +1,105 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background-color: #f4f5f7;
+    font-family: Arial, sans-serif;
+    color: #000000;
+}
+
+.page {
+    min-height: 100vh;
+}
+
+.header {
+    height: 104px;
+    border-bottom: 1px solid #dddddd;
+    background-color: #f4f5f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 400;
+}
+
+.main {
+    min-height: calc(100vh - 104px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 170px;
+}
+
+.login-box {
+    width: 392px;
+}
+
+.login-box h2 {
+    margin: 0 0 24px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.input-group {
+    margin-bottom: 12px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.input-group input {
+    width: 100%;
+    height: 37px;
+    padding: 0 12px;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    background-color: #f4f5f7;
+    font-size: 14px;
+}
+
+.input-group input::placeholder {
+    color: #777777;
+}
+
+.helper-text {
+    min-height: 16px;
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #ff0000;
+}
+
+#login-button {
+    width: 100%;
+    height: 37px;
+    border: none;
+    border-radius: 4px;
+    background-color: #aca0eb;
+    color: #ffffff;
+    font-size: 14px;
+    cursor: not-allowed;
+}
+
+#login-button.active {
+    background-color: #7f6aee;
+    cursor: pointer;
+}
+
+.signup-button {
+    display: block;
+    margin: 12px auto 0;
+    border: none;
+    background: none;
+    font-size: 14px;
+    cursor: pointer;
+}

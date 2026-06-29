@@ -1,0 +1,150 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background-color: #f4f5f7;
+    font-family: Arial, sans-serif;
+    color: #000000;
+}
+
+.page {
+    min-height: 100vh;
+}
+
+.header {
+    position: relative;
+    height: 104px;
+    border-bottom: 1px solid #dddddd;
+    background-color: #f4f5f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 400;
+}
+
+.back-button {
+    position: absolute;
+    left: calc(50% - 230px);
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: none;
+    font-size: 36px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.main {
+    min-height: calc(100vh - 104px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 120px;
+}
+
+.signup-box {
+    width: 392px;
+}
+
+.signup-box h2 {
+    margin: 0 0 12px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.profile-area {
+    margin-bottom: 16px;
+}
+
+.input-label,
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.profile-preview {
+    width: 149px;
+    height: 149px;
+    margin: 8px auto 0;
+    border-radius: 50%;
+    background-color: #c4c4c4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.profile-preview span {
+    font-size: 34px;
+    font-weight: 300;
+    color: #555555;
+}
+
+.profile-preview img {
+    display: none;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.input-group {
+    margin-bottom: 10px;
+}
+
+.input-group input {
+    width: 100%;
+    height: 37px;
+    padding: 0 12px;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    background-color: #f4f5f7;
+    font-size: 14px;
+}
+
+.input-group input::placeholder {
+    color: #777777;
+}
+
+.helper-text {
+    min-height: 16px;
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #ff0000;
+}
+
+#signup-button {
+    width: 100%;
+    height: 37px;
+    margin-top: 4px;
+    border: none;
+    border-radius: 4px;
+    background-color: #aca0eb;
+    color: #ffffff;
+    font-size: 14px;
+    cursor: not-allowed;
+}
+
+#signup-button.active {
+    background-color: #7f6aee;
+    cursor: pointer;
+}
+
+.login-button {
+    display: block;
+    margin: 12px auto 0;
+    border: none;
+    background: none;
+    font-size: 14px;
+    cursor: pointer;
+}
