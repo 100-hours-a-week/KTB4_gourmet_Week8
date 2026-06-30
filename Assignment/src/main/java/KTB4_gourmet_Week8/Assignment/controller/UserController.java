@@ -1,19 +1,26 @@
 package KTB4_gourmet_Week8.Assignment.controller;
 
 import KTB4_gourmet_Week8.Assignment.dto.LoginRequestDto;
+import KTB4_gourmet_Week8.Assignment.dto.LoginResponseDto;
+import KTB4_gourmet_Week8.Assignment.dto.LoginResultDto;
+import KTB4_gourmet_Week8.Assignment.dto.TokenInfoDto;
+import KTB4_gourmet_Week8.Assignment.dto.TokenResultDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserPageResponseDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserPasswordUpdateRequestDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserResponseDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserSignupRequestDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserUpdateRequestDto;
 import KTB4_gourmet_Week8.Assignment.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.validation.annotation.Validated;
@@ -53,8 +60,65 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public UserResponseDto login(@Valid @RequestBody LoginRequestDto request) {
-        return userService.login(request);
+    public LoginResponseDto login(
+            @Valid @RequestBody LoginRequestDto request,
+            HttpServletResponse response
+    ) {
+        LoginResultDto result = userService.login(request);
+
+        ResponseCookie refreshTokenCookie = ResponseCookie
+                .from("refreshToken", result.getRefreshToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(14 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+        return result.getResponse();
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response
+    ) {
+        userService.logout(refreshToken);
+
+        ResponseCookie deleteCookie = ResponseCookie
+                .from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+    }
+
+    @PostMapping("/token/refresh")
+    public TokenInfoDto refreshAccessToken(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response
+    ) {
+        TokenResultDto result = userService.refreshAccessToken(refreshToken);
+
+        ResponseCookie refreshTokenCookie = ResponseCookie
+                .from("refreshToken", result.getNewRefreshToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(14 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+        return result.getToken();
     }
 
     @GetMapping

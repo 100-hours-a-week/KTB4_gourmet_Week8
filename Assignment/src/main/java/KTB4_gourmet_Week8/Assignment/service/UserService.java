@@ -1,17 +1,24 @@
 package KTB4_gourmet_Week8.Assignment.service;
 
+import KTB4_gourmet_Week8.Assignment.auth.JwtProvider;
 import KTB4_gourmet_Week8.Assignment.dto.LoginRequestDto;
+import KTB4_gourmet_Week8.Assignment.dto.LoginResponseDto;
+import KTB4_gourmet_Week8.Assignment.dto.LoginResultDto;
+import KTB4_gourmet_Week8.Assignment.dto.TokenInfoDto;
+import KTB4_gourmet_Week8.Assignment.dto.TokenResultDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserListResponseDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserPageResponseDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserPasswordUpdateRequestDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserResponseDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserSignupRequestDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserUpdateRequestDto;
+import KTB4_gourmet_Week8.Assignment.entity.RefreshToken;
 import KTB4_gourmet_Week8.Assignment.entity.User;
 import KTB4_gourmet_Week8.Assignment.exception.DuplicateEmailException;
 import KTB4_gourmet_Week8.Assignment.exception.DuplicateNicknameException;
 import KTB4_gourmet_Week8.Assignment.exception.InvalidLoginException;
 import KTB4_gourmet_Week8.Assignment.exception.UserNotFoundException;
+import KTB4_gourmet_Week8.Assignment.repository.RefreshTokenRepository;
 import KTB4_gourmet_Week8.Assignment.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,7 +36,9 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final FileStorageService fileStorageService;
+    private final JwtProvider jwtProvider;
 
     @Transactional
     public UserResponseDto signup(UserSignupRequestDto request, MultipartFile profileImage) {
@@ -55,17 +64,112 @@ public class UserService {
         return new UserResponseDto(savedUser);
     }
 
-    public UserResponseDto login(LoginRequestDto request) {
-        User user = userRepository.findByEmailAndPassword(
-                request.getEmail(),
-                request.getPassword()
-        ).orElseThrow(() -> new InvalidLoginException("이메일 또는 비밀번호가 일치하지 않습니다."));
+    @Transactional
+    public LoginResultDto login(LoginRequestDto request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new InvalidLoginException("이메일 또는 비밀번호가 일치하지 않습니다."));
 
         if (user.getDeletedAt() != null) {
             throw new InvalidLoginException("이메일 또는 비밀번호가 일치하지 않습니다.");
         }
 
-        return new UserResponseDto(user);
+        if (!user.getPassword().equals(request.getPassword())) {
+            throw new InvalidLoginException("이메일 또는 비밀번호가 일치하지 않습니다.");
+        }
+
+        String accessToken = jwtProvider.createAccessToken(
+                user.getId(),
+                user.getEmail(),
+                user.getNickname()
+        );
+
+        String refreshToken = jwtProvider.createRefreshToken(user.getId());
+
+        refreshTokenRepository.deleteByUserId(user.getId());
+
+        refreshTokenRepository.save(
+                new RefreshToken(
+                        refreshToken,
+                        user.getId(),
+                        jwtProvider.getRefreshTokenExpiresAt()
+                )
+        );
+
+        LoginResponseDto response = LoginResponseDto.of(
+                user,
+                accessToken,
+                jwtProvider.getAccessTokenValidityInMilliseconds()
+        );
+
+        return new LoginResultDto(response, refreshToken);
+    }
+
+    @Transactional
+    public TokenResultDto refreshAccessToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new InvalidLoginException("인증 정보가 유효하지 않습니다.");
+        }
+
+        try {
+            jwtProvider.parse(refreshToken);
+
+            if (!jwtProvider.isRefreshToken(refreshToken)) {
+                throw new InvalidLoginException("인증 정보가 유효하지 않습니다.");
+            }
+        } catch (Exception e) {
+            throw new InvalidLoginException("인증 정보가 유효하지 않습니다.");
+        }
+
+        RefreshToken savedRefreshToken = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new InvalidLoginException("인증 정보가 유효하지 않습니다."));
+
+        if (savedRefreshToken.isExpired()) {
+            refreshTokenRepository.delete(savedRefreshToken);
+            throw new InvalidLoginException("인증 정보가 유효하지 않습니다.");
+        }
+
+        User user = userRepository.findById(savedRefreshToken.getUserId())
+                .orElseThrow(() -> new InvalidLoginException("인증 정보가 유효하지 않습니다."));
+
+        if (user.getDeletedAt() != null) {
+            refreshTokenRepository.delete(savedRefreshToken);
+            throw new InvalidLoginException("인증 정보가 유효하지 않습니다.");
+        }
+
+        String newAccessToken = jwtProvider.createAccessToken(
+                user.getId(),
+                user.getEmail(),
+                user.getNickname()
+        );
+
+        String newRefreshToken = jwtProvider.createRefreshToken(user.getId());
+
+        refreshTokenRepository.delete(savedRefreshToken);
+
+        refreshTokenRepository.save(
+                new RefreshToken(
+                        newRefreshToken,
+                        user.getId(),
+                        jwtProvider.getRefreshTokenExpiresAt()
+                )
+        );
+
+        TokenInfoDto tokenInfo = new TokenInfoDto(
+                newAccessToken,
+                jwtProvider.getAccessTokenValidityInMilliseconds()
+        );
+
+        return new TokenResultDto(tokenInfo, newRefreshToken);
+    }
+
+    @Transactional
+    public void logout(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return;
+        }
+
+        refreshTokenRepository.findByToken(refreshToken)
+                .ifPresent(refreshTokenRepository::delete);
     }
 
     public UserPageResponseDto getUsers(int page, int size) {

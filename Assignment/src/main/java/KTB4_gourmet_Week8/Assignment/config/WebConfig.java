@@ -16,7 +16,10 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:5500"
                 )
                 .allowedMethods("GET", "POST", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+
     }
 
     @Override
