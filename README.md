@@ -213,19 +213,6 @@ JUnit5를 사용하여 `User` 도메인 테스트 코드를 작성하였다.
 
 ---
 
-## 실행 환경
-
-- Java 21
-- Spring Boot 4.0.6
-- Spring Security
-- Spring Data JPA
-- H2 Database
-- JWT
-- JUnit5
-- Vanilla JavaScript
-
----
-
 ## 최종 결과
 
 이번 주차 과제를 통해 다음 내용을 구현하였다.
