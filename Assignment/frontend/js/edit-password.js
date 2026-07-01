@@ -52,7 +52,6 @@ function validatePasswordForm() {
     return isValid;
 }
 
-
 passwordInput.addEventListener("input", validatePasswordForm);
 passwordCheckInput.addEventListener("input", validatePasswordForm);
 
@@ -76,7 +75,7 @@ editPasswordForm.addEventListener("submit", async function (event) {
     const password = passwordInput.value.trim();
 
     try {
-        const response = await fetch(`${API_BASE_URL}/users/${userId}/password`, {
+        const updatedUser = await apiFetch(`/users/${userId}/password`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json"
@@ -86,19 +85,11 @@ editPasswordForm.addEventListener("submit", async function (event) {
             })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(function () {
-                return null;
-            });
-
-            console.log("비밀번호 수정 실패:", errorData);
-            passwordHelper.textContent = "* 비밀번호 수정에 실패했습니다.";
-            return;
-        }
-
-        const updatedUser = await response.json();
-
         console.log("비밀번호 수정 성공:", updatedUser);
+
+        passwordInput.value = "";
+        passwordCheckInput.value = "";
+        validatePasswordForm();
 
         toast.classList.add("show");
 
@@ -107,6 +98,6 @@ editPasswordForm.addEventListener("submit", async function (event) {
         }, 2000);
     } catch (error) {
         console.error("비밀번호 수정 요청 오류:", error);
-        passwordHelper.textContent = "* 서버와 연결할 수 없습니다.";
+        passwordHelper.textContent = `* ${error?.message ?? "비밀번호 수정에 실패했습니다."}`;
     }
 });

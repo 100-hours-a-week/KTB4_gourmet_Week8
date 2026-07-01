@@ -42,4 +42,9 @@ public class RefreshToken {
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(this.expiresAt);
     }
+
+    public void updateToken(String token, LocalDateTime expiresAt) {
+        this.token = token;
+        this.expiresAt = expiresAt;
+    }
 }

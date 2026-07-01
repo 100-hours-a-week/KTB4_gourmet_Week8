@@ -76,25 +76,30 @@ loginForm.addEventListener("submit", async function (event) {
             headers: {
                 "Content-Type": "application/json"
             },
+            credentials: "include",
             body: JSON.stringify({
                 email: email,
                 password: password
             })
         });
 
+        const data = await response.json().catch(function () {
+            return null;
+        });
+
         if (!response.ok) {
+            console.log("로그인 실패:", data);
             passwordHelper.textContent = "* 아이디 또는 비밀번호를 확인해주세요.";
             return;
         }
 
-        const user = await response.json();
+        console.log("로그인 성공:", data);
 
-        console.log("로그인 성공:", user);
-
-        localStorage.setItem("userId", user.userId ?? user.id);
-        localStorage.setItem("email", user.email);
-        localStorage.setItem("nickname", user.nickname);
-        localStorage.setItem("profileImage", user.profileImage ?? "");
+        localStorage.setItem("userId", data.user.id);
+        localStorage.setItem("email", data.user.email ?? "");
+        localStorage.setItem("nickname", data.user.nickname ?? "");
+        localStorage.setItem("profileImage", data.user.profileImage ?? "");
+        localStorage.setItem("accessToken", data.token.accessToken);
 
         window.location.href = "./posts.html";
     } catch (error) {

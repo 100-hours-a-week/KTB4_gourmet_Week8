@@ -11,14 +11,6 @@ function formatCount(count) {
         return 0;
     }
 
-    if (count >= 100000) {
-        return Math.floor(count / 1000) + "k";
-    }
-
-    if (count >= 10000) {
-        return Math.floor(count / 1000) + "k";
-    }
-
     if (count >= 1000) {
         return Math.floor(count / 1000) + "k";
     }
@@ -64,6 +56,13 @@ function getWriterProfileImageUrl(post) {
     return `${API_BASE_URL}${profileImage}`;
 }
 
+function createStatElement(label, count) {
+    const stat = document.createElement("span");
+    stat.textContent = `${label} ${formatCount(count)}`;
+
+    return stat;
+}
+
 function createPostCard(post) {
     const article = document.createElement("article");
     article.className = "post-card";
@@ -74,54 +73,88 @@ function createPostCard(post) {
 
     article.dataset.postId = postId;
 
-    article.innerHTML = `
-        <div class="post-content">
-            <div class="post-card-top">
-                <div class="post-card-text">
-                    <h2 class="post-title">${getPostTitle(post)}</h2>
+    const postContent = document.createElement("div");
+    postContent.className = "post-content";
 
-                    <div class="post-stats">
-                        <span>좋아요 ${formatCount(post.likeCount)}</span>
-                        <span>댓글 ${formatCount(post.commentCount)}</span>
-                        <span>조회수 ${formatCount(post.viewCount)}</span>
-                    </div>
-                </div>
+    const postCardTop = document.createElement("div");
+    postCardTop.className = "post-card-top";
 
-                ${thumbnailUrl ? `
-                    <div class="post-thumbnail-wrapper">
-                        <img class="post-thumbnail" src="${thumbnailUrl}" alt="게시글 썸네일">
-                    </div>
-                ` : ""}
-            </div>
-        </div>
+    const postCardText = document.createElement("div");
+    postCardText.className = "post-card-text";
 
-        <div class="post-writer">
-            <div class="writer-image"></div>
-            <span class="writer-name">${getWriterName(post)}</span>
-            <span class="post-date">${formatDate(post.createdAt)}</span>
-        </div>
-    `;
+    const postTitle = document.createElement("h2");
+    postTitle.className = "post-title";
+    postTitle.textContent = getPostTitle(post);
 
-    const writerImage = article.querySelector(".writer-image");
+    const postStats = document.createElement("div");
+    postStats.className = "post-stats";
 
-    if (writerImage && writerProfileImageUrl) {
+    postStats.appendChild(createStatElement("좋아요", post.likeCount));
+    postStats.appendChild(createStatElement("댓글", post.commentCount));
+    postStats.appendChild(createStatElement("조회수", post.viewCount));
+
+    postCardText.appendChild(postTitle);
+    postCardText.appendChild(postStats);
+
+    postCardTop.appendChild(postCardText);
+
+    if (thumbnailUrl) {
+        const thumbnailWrapper = document.createElement("div");
+        thumbnailWrapper.className = "post-thumbnail-wrapper";
+
+        const thumbnailImage = document.createElement("img");
+        thumbnailImage.className = "post-thumbnail";
+        thumbnailImage.src = thumbnailUrl;
+        thumbnailImage.alt = "게시글 썸네일";
+
+        thumbnailWrapper.appendChild(thumbnailImage);
+        postCardTop.appendChild(thumbnailWrapper);
+    }
+
+    postContent.appendChild(postCardTop);
+
+    const postWriter = document.createElement("div");
+    postWriter.className = "post-writer";
+
+    const writerImage = document.createElement("div");
+    writerImage.className = "writer-image";
+
+    if (writerProfileImageUrl) {
         writerImage.style.backgroundImage = `url(${writerProfileImageUrl})`;
         writerImage.style.backgroundSize = "cover";
         writerImage.style.backgroundPosition = "center";
     }
 
+    const writerName = document.createElement("span");
+    writerName.className = "writer-name";
+    writerName.textContent = getWriterName(post);
+
+    const postDate = document.createElement("span");
+    postDate.className = "post-date";
+    postDate.textContent = formatDate(post.createdAt);
+
+    postWriter.appendChild(writerImage);
+    postWriter.appendChild(writerName);
+    postWriter.appendChild(postDate);
+
+    article.appendChild(postContent);
+    article.appendChild(postWriter);
+
     article.addEventListener("click", function () {
-        localStorage.setItem("selectedPostId", postId);
-        window.location.href = "./post-detail.html";
+        window.location.href = `./post-detail.html?postId=${postId}`;
     });
 
     return article;
 }
 
-function renderEmptyMessage() {
-    postList.innerHTML = `
-        <p class="empty-message">아직 작성된 게시글이 없습니다.</p>
-    `;
+function renderEmptyMessage(message = "아직 작성된 게시글이 없습니다.") {
+    postList.replaceChildren();
+
+    const emptyMessage = document.createElement("p");
+    emptyMessage.className = "empty-message";
+    emptyMessage.textContent = message;
+
+    postList.appendChild(emptyMessage);
 }
 
 async function fetchPosts() {
@@ -160,9 +193,7 @@ async function fetchPosts() {
         console.error(error);
 
         if (currentPage === 0) {
-            postList.innerHTML = `
-                <p class="empty-message">게시글 목록을 불러오지 못했습니다.</p>
-            `;
+            renderEmptyMessage("게시글 목록을 불러오지 못했습니다.");
         }
     } finally {
         isLoading = false;

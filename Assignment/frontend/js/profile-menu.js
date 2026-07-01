@@ -5,6 +5,17 @@ const goEditProfile = document.querySelector("#go-edit-profile");
 const goEditPassword = document.querySelector("#go-edit-password");
 const logoutButton = document.querySelector("#logout-button");
 
+function getProfileImageUrl(profileImage) {
+    if (!profileImage || profileImage === "null" || profileImage === "undefined") {
+        return null;
+    }
+
+    if (profileImage.startsWith("http://") || profileImage.startsWith("https://")) {
+        return profileImage;
+    }
+
+    return `${API_BASE_URL}${profileImage}`;
+}
 
 if (headerProfileButton && profileDropdown) {
     headerProfileButton.addEventListener("click", function (event) {
@@ -43,20 +54,35 @@ if (goEditPassword) {
 }
 
 if (logoutButton) {
-    logoutButton.addEventListener("click", function () {
-        localStorage.clear();
-        window.location.href = "./login.html";
+    logoutButton.addEventListener("click", async function () {
+        try {
+            await fetch(`${API_BASE_URL}/users/logout`, {
+                method: "POST",
+                credentials: "include"
+            });
+        } catch (error) {
+            console.error("로그아웃 요청 오류:", error);
+        } finally {
+            clearLoginStorage();
+            window.location.href = "./login.html";
+        }
     });
 }
 
 function renderHeaderProfileImage() {
     const profileImage = localStorage.getItem("profileImage");
+    const profileImageUrl = getProfileImageUrl(profileImage);
 
-    if (!headerProfileButton || !profileImage) {
+    if (!headerProfileButton) {
         return;
     }
 
-    headerProfileButton.style.backgroundImage = `url(${API_BASE_URL}${profileImage})`;
+    if (!profileImageUrl) {
+        headerProfileButton.style.backgroundImage = "";
+        return;
+    }
+
+    headerProfileButton.style.backgroundImage = `url(${profileImageUrl})`;
     headerProfileButton.style.backgroundSize = "cover";
     headerProfileButton.style.backgroundPosition = "center";
 }

@@ -85,15 +85,20 @@ public class UserService {
 
         String refreshToken = jwtProvider.createRefreshToken(user.getId());
 
-        refreshTokenRepository.deleteByUserId(user.getId());
-
-        refreshTokenRepository.save(
-                new RefreshToken(
-                        refreshToken,
-                        user.getId(),
-                        jwtProvider.getRefreshTokenExpiresAt()
-                )
-        );
+        refreshTokenRepository.findByUserId(user.getId())
+                .ifPresentOrElse(
+                        savedRefreshToken -> savedRefreshToken.updateToken(
+                                refreshToken,
+                                jwtProvider.getRefreshTokenExpiresAt()
+                        ),
+                        () -> refreshTokenRepository.save(
+                                new RefreshToken(
+                                        refreshToken,
+                                        user.getId(),
+                                        jwtProvider.getRefreshTokenExpiresAt()
+                                )
+                        )
+                );
 
         LoginResponseDto response = LoginResponseDto.of(
                 user,
@@ -144,14 +149,9 @@ public class UserService {
 
         String newRefreshToken = jwtProvider.createRefreshToken(user.getId());
 
-        refreshTokenRepository.delete(savedRefreshToken);
-
-        refreshTokenRepository.save(
-                new RefreshToken(
-                        newRefreshToken,
-                        user.getId(),
-                        jwtProvider.getRefreshTokenExpiresAt()
-                )
+        savedRefreshToken.updateToken(
+                newRefreshToken,
+                jwtProvider.getRefreshTokenExpiresAt()
         );
 
         TokenInfoDto tokenInfo = new TokenInfoDto(

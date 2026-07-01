@@ -10,27 +10,6 @@ const submitButton = document.querySelector("#submit-button");
 
 let selectedImage = null;
 
-if (imageInput) {
-    imageInput.addEventListener("change", function () {
-        if (!imageInput.files || imageInput.files.length === 0) {
-            if (fileName) {
-                fileName.textContent = "기존 이미지를 유지합니다.";
-            }
-            return;
-        }
-
-        const names = Array.from(imageInput.files)
-            .map(function (file) {
-                return file.name;
-            })
-            .join(", ");
-
-        if (fileName) {
-            fileName.textContent = names;
-        }
-    });
-}
-
 function getLoginUserId() {
     const userId = localStorage.getItem("userId");
 
@@ -69,6 +48,13 @@ function validateEditForm() {
 }
 
 function getSelectedPostId() {
+    const params = new URLSearchParams(window.location.search);
+    const postId = params.get("postId");
+
+    if (postId) {
+        return postId;
+    }
+
     return localStorage.getItem("selectedPostId");
 }
 
@@ -96,13 +82,20 @@ async function fetchPostForEdit() {
 
         if (!isOwner(postOwnerId)) {
             alert("작성자만 수정할 수 있습니다.");
-            window.location.href = "./post-detail.html";
+            window.location.href = `./post-detail.html?postId=${postId}`;
             return;
         }
 
         titleInput.value = post.title ?? "";
         contentInput.value = post.content ?? "";
-        fileName.textContent = post.imageName ?? post.postImage ?? "기존 파일 명";
+
+        if (fileName) {
+            if (post.imageUrls && post.imageUrls.length > 0) {
+                fileName.textContent = "기존 이미지가 있습니다.";
+            } else {
+                fileName.textContent = "기존 이미지 없음";
+            }
+        }
 
         validateEditForm();
     } catch (error) {
@@ -111,7 +104,6 @@ async function fetchPostForEdit() {
         window.location.href = "./posts.html";
     }
 }
-
 
 titleInput.addEventListener("input", function () {
     if (titleInput.value.length > 26) {
@@ -123,20 +115,33 @@ titleInput.addEventListener("input", function () {
 
 contentInput.addEventListener("input", validateEditForm);
 
-imageInput.addEventListener("change", function () {
-    const file = imageInput.files[0];
+if (imageInput) {
+    imageInput.addEventListener("change", function () {
+        if (!imageInput.files || imageInput.files.length === 0) {
+            selectedImage = null;
 
-    if (!file) {
-        selectedImage = null;
-        fileName.textContent = "기존 파일 명";
-        return;
-    }
+            if (fileName) {
+                fileName.textContent = "기존 이미지를 유지합니다.";
+            }
 
-    selectedImage = file;
-    fileName.textContent = file.name;
+            return;
+        }
 
-    console.log("수정 이미지 선택:", selectedImage);
-});
+        selectedImage = imageInput.files[0];
+
+        const names = Array.from(imageInput.files)
+            .map(function (file) {
+                return file.name;
+            })
+            .join(", ");
+
+        if (fileName) {
+            fileName.textContent = names;
+        }
+
+        console.log("수정 이미지 선택:", selectedImage);
+    });
+}
 
 postEditForm.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -171,37 +176,31 @@ postEditForm.addEventListener("submit", async function (event) {
             });
         }
 
-        const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+        const updatedPost = await apiFetch(`/posts/${postId}`, {
             method: "PATCH",
             body: formData
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(function () {
-                return null;
-            });
-
-            console.log("게시글 수정 실패:", errorData);
-            helperText.textContent = "* 게시글 수정에 실패했습니다.";
-            return;
-        }
-
-        const updatedPost = await response.json();
-
         console.log("게시글 수정 성공:", updatedPost);
 
         alert("게시글이 수정되었습니다.");
-        window.location.href = "./post-detail.html";
+        window.location.href = `./post-detail.html?postId=${postId}`;
     } catch (error) {
         console.error("게시글 수정 요청 오류:", error);
-        helperText.textContent = "* 서버와 연결할 수 없습니다.";
+        helperText.textContent = `* ${error?.message ?? "게시글 수정에 실패했습니다."}`;
     }
 });
 
 backButton.addEventListener("click", function () {
-    window.location.href = "./post-detail.html";
-});
+    const postId = getSelectedPostId();
 
+    if (!postId) {
+        window.location.href = "./posts.html";
+        return;
+    }
+
+    window.location.href = `./post-detail.html?postId=${postId}`;
+});
 
 fetchPostForEdit();
 validateEditForm();

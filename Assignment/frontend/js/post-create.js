@@ -86,22 +86,14 @@ postCreateForm.addEventListener("submit", async function (event) {
             });
         }
 
-        const response = await fetch(`${API_BASE_URL}/users/${userId}/posts`, {
+        const post = await apiFetch(`/users/${userId}/posts`, {
             method: "POST",
             body: formData
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(function () {
-                return null;
-            });
-
-            console.log("게시글 작성 실패:", errorData);
-            helperText.textContent = "* 게시글 작성에 실패했습니다.";
+        if (!post) {
             return;
         }
-
-        const post = await response.json();
 
         console.log("게시글 작성 성공:", post);
 
@@ -115,7 +107,7 @@ postCreateForm.addEventListener("submit", async function (event) {
         window.location.href = "./posts.html";
     } catch (error) {
         console.error("게시글 작성 요청 오류:", error);
-        helperText.textContent = "* 서버와 연결할 수 없습니다.";
+        helperText.textContent = `* ${error?.message ?? "게시글 작성에 실패했습니다."}`;
     }
 });
 
