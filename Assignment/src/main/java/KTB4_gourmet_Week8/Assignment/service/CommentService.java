@@ -12,6 +12,7 @@ import KTB4_gourmet_Week8.Assignment.exception.UserNotFoundException;
 import KTB4_gourmet_Week8.Assignment.repository.CommentRepository;
 import KTB4_gourmet_Week8.Assignment.repository.PostRepository;
 import KTB4_gourmet_Week8.Assignment.repository.UserRepository;
+import KTB4_gourmet_Week8.Assignment.auth.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,8 @@ public class CommentService {
 
     @Transactional
     public CommentResponseDto createComment(Long postId, CommentCreateRequestDto request) {
+        SecurityUtil.validateLoginUser(request.getUserId());
+
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostNotFoundException("게시글을 찾을 수 없습니다."));
 
@@ -73,6 +76,7 @@ public class CommentService {
         Comment comment = findCommentById(commentId);
 
         validateCommentBelongsToPost(comment, postId);
+        SecurityUtil.validateLoginUser(comment.getUserId());
 
         comment.update(request.getContent());
 
@@ -84,6 +88,7 @@ public class CommentService {
         Comment comment = findCommentById(commentId);
 
         validateCommentBelongsToPost(comment, postId);
+        SecurityUtil.validateLoginUser(comment.getUserId());
 
         commentRepository.delete(comment);
     }

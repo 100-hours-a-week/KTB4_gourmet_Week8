@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import KTB4_gourmet_Week8.Assignment.auth.SecurityUtil;
 
 import java.util.List;
 
@@ -186,6 +187,8 @@ public class UserService {
 
     @Transactional
     public UserResponseDto updateUser(Long userId, UserUpdateRequestDto request, MultipartFile profileImage) {
+        SecurityUtil.validateLoginUser(userId);
+
         User user = findUserById(userId);
 
         if (userRepository.existsByNicknameAndIdNot(request.getNickname(), userId)) {
@@ -205,6 +208,8 @@ public class UserService {
 
     @Transactional
     public UserResponseDto updatePassword(Long userId, UserPasswordUpdateRequestDto request) {
+        SecurityUtil.validateLoginUser(userId);
+
         User user = findUserById(userId);
 
         user.updatePassword(request.getPassword());
@@ -214,6 +219,8 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long userId) {
+        SecurityUtil.validateLoginUser(userId);
+
         User user = findUserById(userId);
 
         user.delete();

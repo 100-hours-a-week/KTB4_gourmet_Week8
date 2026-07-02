@@ -16,6 +16,7 @@ import KTB4_gourmet_Week8.Assignment.repository.PostLikeRepository;
 import KTB4_gourmet_Week8.Assignment.repository.PostRepository;
 import KTB4_gourmet_Week8.Assignment.repository.PostViewRepository;
 import KTB4_gourmet_Week8.Assignment.repository.UserRepository;
+import KTB4_gourmet_Week8.Assignment.auth.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +46,8 @@ public class PostService {
             PostCreateRequestDto request,
             List<MultipartFile> images
     ) {
+        SecurityUtil.validateLoginUser(userId);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("회원을 찾을 수 없습니다."));
 
@@ -126,6 +129,8 @@ public class PostService {
     ) {
         Post post = findPostById(postId);
 
+        SecurityUtil.validateLoginUser(post.getUserId());
+
         post.update(
                 request.getTitle(),
                 request.getContent()
@@ -155,6 +160,8 @@ public class PostService {
     @Transactional
     public void deletePost(Long postId) {
         Post post = findPostById(postId);
+
+        SecurityUtil.validateLoginUser(post.getUserId());
 
         postImageRepository.deleteByPost_Id(postId);
         postLikeRepository.deleteByPost_Id(postId);
