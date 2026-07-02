@@ -1,17 +1,7 @@
 package KTB4_gourmet_Week8.Assignment.service;
 
 import KTB4_gourmet_Week8.Assignment.auth.JwtProvider;
-import KTB4_gourmet_Week8.Assignment.dto.LoginRequestDto;
-import KTB4_gourmet_Week8.Assignment.dto.LoginResponseDto;
-import KTB4_gourmet_Week8.Assignment.dto.LoginResultDto;
-import KTB4_gourmet_Week8.Assignment.dto.TokenInfoDto;
-import KTB4_gourmet_Week8.Assignment.dto.TokenResultDto;
-import KTB4_gourmet_Week8.Assignment.dto.UserListResponseDto;
-import KTB4_gourmet_Week8.Assignment.dto.UserPageResponseDto;
-import KTB4_gourmet_Week8.Assignment.dto.UserPasswordUpdateRequestDto;
-import KTB4_gourmet_Week8.Assignment.dto.UserResponseDto;
-import KTB4_gourmet_Week8.Assignment.dto.UserSignupRequestDto;
-import KTB4_gourmet_Week8.Assignment.dto.UserUpdateRequestDto;
+import KTB4_gourmet_Week8.Assignment.dto.*;
 import KTB4_gourmet_Week8.Assignment.entity.RefreshToken;
 import KTB4_gourmet_Week8.Assignment.entity.User;
 import KTB4_gourmet_Week8.Assignment.exception.DuplicateEmailException;
@@ -100,13 +90,9 @@ public class UserService {
                         )
                 );
 
-        LoginResponseDto response = LoginResponseDto.of(
-                user,
-                accessToken,
-                jwtProvider.getAccessTokenValidityInMilliseconds()
-        );
+        LoginResponseDto response = LoginResponseDto.of(user);
 
-        return new LoginResultDto(response, refreshToken);
+        return new LoginResultDto(response, accessToken, refreshToken);
     }
 
     @Transactional
@@ -154,12 +140,7 @@ public class UserService {
                 jwtProvider.getRefreshTokenExpiresAt()
         );
 
-        TokenInfoDto tokenInfo = new TokenInfoDto(
-                newAccessToken,
-                jwtProvider.getAccessTokenValidityInMilliseconds()
-        );
-
-        return new TokenResultDto(tokenInfo, newRefreshToken);
+        return new TokenResultDto(newAccessToken, newRefreshToken);
     }
 
     @Transactional

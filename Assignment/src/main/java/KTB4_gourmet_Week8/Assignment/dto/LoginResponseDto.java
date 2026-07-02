@@ -10,16 +10,9 @@ public class LoginResponseDto {
 
     private UserResponseDto user;
 
-    private TokenInfoDto token;
-
-    public static LoginResponseDto of(
-            User user,
-            String accessToken,
-            long expiresIn
-    ) {
+    public static LoginResponseDto of(User user) {
         return new LoginResponseDto(
-                new UserResponseDto(user),
-                new TokenInfoDto(accessToken, expiresIn)
+                new UserResponseDto(user)
         );
     }
 }

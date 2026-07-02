@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class TokenResultDto {
 
-    private TokenInfoDto token;
+    private String newAccessToken;
 
     private String newRefreshToken;
 }

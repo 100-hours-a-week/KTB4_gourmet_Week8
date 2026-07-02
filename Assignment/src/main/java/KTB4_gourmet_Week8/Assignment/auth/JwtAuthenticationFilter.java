@@ -5,11 +5,11 @@ import KTB4_gourmet_Week8.Assignment.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +27,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
+
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
@@ -38,14 +40,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String accessToken = resolveAccessTokenFromCookie(request);
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        if (accessToken == null || accessToken.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        String accessToken = authorizationHeader.substring(7);
 
         try {
             jwtProvider.parse(accessToken);
@@ -84,6 +84,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
             sendUnauthorizedResponse(response, "인증 정보가 유효하지 않습니다.");
         }
+    }
+
+    private String resolveAccessTokenFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies == null) {
+            return null;
+        }
+
+        for (Cookie cookie : cookies) {
+            if (ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+
+        return null;
     }
 
     private void sendUnauthorizedResponse(

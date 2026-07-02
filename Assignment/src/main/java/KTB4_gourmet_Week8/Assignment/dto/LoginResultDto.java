@@ -9,5 +9,7 @@ public class LoginResultDto {
 
     private LoginResponseDto response;
 
+    private String accessToken;
+
     private String refreshToken;
 }

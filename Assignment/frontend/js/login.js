@@ -95,11 +95,11 @@ loginForm.addEventListener("submit", async function (event) {
 
         console.log("로그인 성공:", data);
 
+        localStorage.removeItem("accessToken");
         localStorage.setItem("userId", data.user.id);
         localStorage.setItem("email", data.user.email ?? "");
         localStorage.setItem("nickname", data.user.nickname ?? "");
         localStorage.setItem("profileImage", data.user.profileImage ?? "");
-        localStorage.setItem("accessToken", data.token.accessToken);
 
         window.location.href = "./posts.html";
     } catch (error) {

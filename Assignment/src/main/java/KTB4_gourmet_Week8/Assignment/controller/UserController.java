@@ -3,7 +3,6 @@ package KTB4_gourmet_Week8.Assignment.controller;
 import KTB4_gourmet_Week8.Assignment.dto.LoginRequestDto;
 import KTB4_gourmet_Week8.Assignment.dto.LoginResponseDto;
 import KTB4_gourmet_Week8.Assignment.dto.LoginResultDto;
-import KTB4_gourmet_Week8.Assignment.dto.TokenInfoDto;
 import KTB4_gourmet_Week8.Assignment.dto.TokenResultDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserPageResponseDto;
 import KTB4_gourmet_Week8.Assignment.dto.UserPasswordUpdateRequestDto;
@@ -21,15 +20,18 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.validation.annotation.Validated;
 
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
 @Validated
 public class UserController {
+
+    private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
     private final UserService userService;
 
@@ -66,16 +68,8 @@ public class UserController {
     ) {
         LoginResultDto result = userService.login(request);
 
-        ResponseCookie refreshTokenCookie = ResponseCookie
-                .from("refreshToken", result.getRefreshToken())
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(14 * 24 * 60 * 60)
-                .sameSite("Lax")
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+        addCookie(response, createAccessTokenCookie(result.getAccessToken()));
+        addCookie(response, createRefreshTokenCookie(result.getRefreshToken()));
 
         return result.getResponse();
     }
@@ -83,42 +77,25 @@ public class UserController {
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(
-            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
         userService.logout(refreshToken);
 
-        ResponseCookie deleteCookie = ResponseCookie
-                .from("refreshToken", "")
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(0)
-                .sameSite("Lax")
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+        addCookie(response, deleteAccessTokenCookie());
+        addCookie(response, deleteRefreshTokenCookie());
     }
 
     @PostMapping("/token/refresh")
-    public TokenInfoDto refreshAccessToken(
-            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void refreshAccessToken(
+            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
         TokenResultDto result = userService.refreshAccessToken(refreshToken);
 
-        ResponseCookie refreshTokenCookie = ResponseCookie
-                .from("refreshToken", result.getNewRefreshToken())
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(14 * 24 * 60 * 60)
-                .sameSite("Lax")
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
-
-        return result.getToken();
+        addCookie(response, createAccessTokenCookie(result.getNewAccessToken()));
+        addCookie(response, createRefreshTokenCookie(result.getNewRefreshToken()));
     }
 
     @GetMapping
@@ -162,5 +139,53 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
+    }
+
+    private ResponseCookie createAccessTokenCookie(String accessToken) {
+        return ResponseCookie
+                .from(ACCESS_TOKEN_COOKIE_NAME, accessToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(30 * 60)
+                .sameSite("Lax")
+                .build();
+    }
+
+    private ResponseCookie createRefreshTokenCookie(String refreshToken) {
+        return ResponseCookie
+                .from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(14 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+    }
+
+    private ResponseCookie deleteAccessTokenCookie() {
+        return ResponseCookie
+                .from(ACCESS_TOKEN_COOKIE_NAME, "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+    }
+
+    private ResponseCookie deleteRefreshTokenCookie() {
+        return ResponseCookie
+                .from(REFRESH_TOKEN_COOKIE_NAME, "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+    }
+
+    private void addCookie(HttpServletResponse response, ResponseCookie cookie) {
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }
